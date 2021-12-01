@@ -1,5 +1,9 @@
 name: GitHub action workflow for prod
-on: [push]
+on: 
+  push:
+    branches:
+      - prod
+
 jobs:
   Explore-GitHub-Actions:
     runs-on: ubuntu-latest
