@@ -37,7 +37,6 @@ platform :android do
   # end
 
   lane :dev do
-    gradle(task: "clean")
-    gradle(task: "assembleDebug")
+    sh "flutter build apk -v"
   end
 end
