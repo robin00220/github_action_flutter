@@ -13,21 +13,23 @@
 # Uncomment the line if you want fastlane to automatically update itself
 # update_fastlane
 
-default_platform(:android)
+default_platform(:ios)
 
-platform :android do
+platform :ios do
 
   lane :build do
     build_number = number_of_commits(all: false)
 
-    sh "flutter build apk --release --build-number=#{build_number} --verbose"
-
-    firebase_app_distribution(
-      app: "1:538649465191:android:de469bb7effccb99c6dfc2",
-      android_artifact_type: "APK",
-      android_artifact_path: "../build/app/outputs/flutter-apk/app-release.apk",
-      testers: "robin_chang@owlting.com"
+    increment_build_number(
+      build_number: build_number
     )
+
+    # sync_code_signing
+    build_app
+    upload_to_testflight(
+      skip_waiting_for_build_processing: true
+    )
+    
   end
 
 end
