@@ -1,5 +1,5 @@
 app_identifier("com.src.githubAction") # The bundle identifier of your app
-apple_id("robin_chang@owlting.com") # Your Apple email address
+apple_id("dev@obook.com") # Your Apple email address
 
 itc_team_id("576121") # App Store Connect Team ID
 team_id("KFPRDHK2VR") # Developer Portal Team ID
