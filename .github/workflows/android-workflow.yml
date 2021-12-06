@@ -30,6 +30,17 @@ jobs:
           ruby-version: '3.0.3'
           bundler-cache: true
           working-directory: android
+
+      # Get version name & version code
+      - name: Get the version name
+        id: versionNameId
+        run: echo "::set-output name=versionName::$(cat pubspec.yaml | grep "version:" | awk '{print $(NF)}' | awk -F '[+]' '{print $(NF-1)}')"
+      - name: Get the version code
+        id: versionCodeId
+        run: echo "::set-output name=versionCode::$(echo $(git rev-list HEAD --count))"
+
+      - name: Test
+        run: echo "${{ steps.versionNameId.outputs.versionName }}.${{ steps.versionCodeId.outputs.versionCode }}"
       
       # Build and deploy with Fastlane 🚀.
       - run: bundle exec fastlane build
@@ -37,17 +48,15 @@ jobs:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
         working-directory: android
 
-  # Explore-GitHub-Actions:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
-  #     - run: echo "🐧 This job is now running on a ${{ runner.os }} server hosted by GitHub!"
-  #     - run: echo "🔎 The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
-  #     - name: Check out repository code
-  #       uses: actions/checkout@v2
-  #     - run: echo "💡 The ${{ github.repository }} repository has been cloned to the runner."
-  #     - run: echo "🖥️ The workflow is now ready to test your code on the runner."
-  #     - name: List files in the repository
-  #       run: |
-  #         ls ${{ github.workspace }}
-  #     - run: echo "🍏 This job's status is ${{ job.status }}."
+      - name: Configure AWS credentials from Production account
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.S3_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.S3_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-1
+        env:
+          S3_ACCESS_KEY: ${{ secrets.S3_ACCESS_KEY }}
+          S3_SECRET_ACCESS_KEY: ${{ secrets.S3_SECRET_ACCESS_KEY }}
+    
+      - name: Deploy (Copy files to s3 bucket with the AWS CLI)
+        run: aws s3 cp build/app/outputs/flutter-apk/app-release.apk s3://owlting-qa/github_action_flutter/${{ steps.versionNameId.outputs.versionName }}.${{ steps.versionCodeId.outputs.versionCode }}/github_action_flutter_${{ steps.versionNameId.outputs.versionName }}.${{ steps.versionCodeId.outputs.versionCode }}.apk --acl public-read

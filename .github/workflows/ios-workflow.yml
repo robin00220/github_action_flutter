@@ -34,12 +34,9 @@ jobs:
       # Build and deploy with Fastlane 🚀.
       - run: bundle exec fastlane build
         env:
-          FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD: ${{ secrets.FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD }}
-          FASTLANE_PASSWORD: ${{ secrets.FASTLANE_PASSWORD }}
+          APP_STORE_CONNECT_API_KEY_ISSURE_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ISSURE_ID }}
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_API_KEY_CONTENT: ${{ secrets.APP_STORE_CONNECT_API_KEY_CONTENT }}
+          GIT_PERSONAL_ACCESS_TOKEN: ${{ secrets.GIT_PERSONAL_ACCESS_TOKEN }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
         working-directory: ios
-
-      # - name: Upload artifact to Github
-      #   uses: actions/upload-artifact@v1
-      #   with:
-      #     name: release-apk
-      #     path: build/app/outputs/flutter-apk/app-release.apk
