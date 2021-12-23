@@ -1,10 +1,16 @@
 name: android workflow
 on: 
   workflow_dispatch:
+    inputs:
+      job:
+        description: 'Jobs to run (android OR ios OR all)'
+        required: true
+        default: 'all'
 
 jobs:
   build_android:
     runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.job == 'android' || github.event.inputs.job == 'all' }}
     steps:
       # Set up Flutter.
       - name: Clone Flutter repository with stable channel
@@ -60,3 +66,42 @@ jobs:
     
       - name: Deploy (Copy files to s3 bucket with the AWS CLI)
         run: aws s3 cp build/app/outputs/flutter-apk/app-release.apk s3://owlting-qa/github_action_flutter/${{ steps.versionNameId.outputs.versionName }}.${{ steps.versionCodeId.outputs.versionCode }}/github_action_flutter_${{ steps.versionNameId.outputs.versionName }}.${{ steps.versionCodeId.outputs.versionCode }}.apk --acl public-read
+  
+  build_ios:
+    runs-on: macos-11
+    if: ${{ github.event.inputs.job == 'ios' || github.event.inputs.job == 'all' }}
+    steps:
+      # Set up Flutter.
+      - name: Clone Flutter repository with stable channel
+        uses: subosito/flutter-action@v1
+        with:
+          channel: stable
+      - run: flutter doctor -v
+
+      # Checkout code and prepare the project.
+      - name: Checkout code and prepare the project.
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - run: flutter pub get
+      - run: flutter test
+      - run: flutter analyze --no-fatal-infos --no-fatal-warnings
+      - run: flutter build ios --release --no-codesign
+
+      # Setup Ruby, Bundler, and Gemfile dependencies
+      - name: Setup Fastlane
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.0.3'
+          bundler-cache: true
+          working-directory: ios
+      
+      # Build and deploy with Fastlane 🚀.
+      - run: bundle exec fastlane build
+        env:
+          APP_STORE_CONNECT_API_KEY_ISSURE_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ISSURE_ID }}
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_API_KEY_CONTENT: ${{ secrets.APP_STORE_CONNECT_API_KEY_CONTENT }}
+          GIT_PERSONAL_ACCESS_TOKEN: ${{ secrets.GIT_PERSONAL_ACCESS_TOKEN }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+        working-directory: ios
